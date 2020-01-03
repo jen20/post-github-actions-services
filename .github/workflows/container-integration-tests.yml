@@ -1,0 +1,34 @@
+name: Integration Tests (Container)
+on: [push, pull_request]
+
+jobs:
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    # This is not an image tht I'd consider using in production but works for the purposes
+    # of this demo since it has everything pre-installed and is very small!
+    container:
+      image: cfmanteiga/alpine-bash-curl-jq
+
+    services:
+      consul:
+        image: consul:1.6.2
+        env:
+          CONSUL_BIND_INTERFACE: eth0
+        ports:
+          - 8300-8302:8300-8302/tcp
+          - 8301-8302:8301-8302/udp
+          - 8500:8500/tcp
+          - 8600:8600/tcp
+          - 8600:8600/udp
+
+    steps:
+      - name: Check Out Sources
+        uses: actions/checkout@3537747199ad29df25693bc607e99df5d7726ffd
+
+      - name: Run Integration Tests
+        shell: bash
+        run: ./key-value-tests.sh
+        env:
+          CONSUL_URL: consul:8500
